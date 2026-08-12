@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — SwiftWeb NG</title>
+  <style>
+    /* ----- reset & base ----- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      background: #f4f7fc;
+      color: #1e293b;
+      line-height: 1.5;
+    }
+    button {
+      cursor: pointer;
+      font: inherit;
+    }
+    /* ----- admin shell (sidebar + main) ----- */
+    .admin-shell {
+      display: flex;
+      min-height: 100vh;
+    }
+    /* ----- sidebar ----- */
+    .sidebar {
+      width: 260px;
+      background: #0b1a2e;
+      color: #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      padding: 2rem 1.2rem;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 1.6rem;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      margin-bottom: 2.5rem;
+      color: white;
+    }
+    .brand-mark {
+      font-size: 2rem;
+      line-height: 1;
+    }
+    .brand-ng {
+      color: #38bdf8;
+    }
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      flex: 1;
+    }
+    .sidebar-link {
+      background: transparent;
+      border: none;
+      color: #b9c7da;
+      padding: 0.7rem 1rem;
+      border-radius: 8px;
+      text-align: left;
+      font-weight: 500;
+      transition: all 0.15s;
+      font-size: 1rem;
+    }
+    .sidebar-link:hover {
+      background: #1e3a5f;
+      color: white;
+    }
+    .sidebar-link.is-active {
+      background: #1e3a5f;
+      color: white;
+      box-shadow: 0 0 0 1px #38bdf8;
+    }
+    .sidebar-logout {
+      margin-top: 2rem;
+      background: transparent;
+      border: 1px solid #4b5f77;
+      color: #b9c7da;
+      padding: 0.6rem 1rem;
+      border-radius: 30px;
+      font-weight: 500;
+      transition: 0.2s;
+      width: fit-content;
+    }
+    .sidebar-logout:hover {
+      background: #b91c1c;
+      border-color: #b91c1c;
+      color: white;
+    }
+    /* ----- main content ----- */
+    .admin-main {
+      flex: 1;
+      padding: 2rem 2.2rem;
+      background: #f4f7fc;
+      overflow-x: auto;
+    }
+    /* ----- tabs panels ----- */
+    .tab-panel {
+      display: none;
+    }
+    .tab-panel.is-active {
+      display: block;
+    }
+    .panel-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 1.8rem;
+    }
+    .panel-header h1 {
+      font-size: 1.9rem;
+      font-weight: 600;
+      letter-spacing: -0.4px;
+    }
+    .panel-header p {
+      color: #475569;
+      font-size: 1rem;
+      margin-left: 0.5rem;
+      flex: 1;
+    }
+    .btn-primary {
+      background: #0b1a2e;
+      border: none;
+      color: white;
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+      font-weight: 500;
+      transition: 0.2s;
+      font-size: 0.95rem;
+      border: 1px solid transparent;
+    }
+    .btn-primary:hover {
+      background: #1e3a5f;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    /* ----- toolbar / filters ----- */
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.8rem;
+      background: white;
+      padding: 0.8rem 1.2rem;
+      border-radius: 40px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+      align-items: center;
+    }
+    .toolbar input,
+    .toolbar select {
+      padding: 0.5rem 1rem;
+      border: 1px solid #d1d9e6;
+      border-radius: 40px;
+      font-size: 0.9rem;
+      background: white;
+      flex: 1 1 200px;
+      min-width: 140px;
+    }
+    .toolbar input:focus,
+    .toolbar select:focus {
+      outline: 2px solid #0b1a2e;
+      outline-offset: 1px;
+    }
+    /* ----- table ----- */
+    .table-wrap {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.02);
+      overflow-x: auto;
+      padding: 0.2rem 0 0.2rem 0;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      min-width: 860px;
+    }
+    .data-table th {
+      text-align: left;
+      padding: 1rem 1rem 0.8rem 1rem;
+      font-weight: 600;
+      color: #334155;
+      border-bottom: 1px solid #e9edf4;
+    }
+    .data-table td {
+      padding: 0.9rem 1rem;
+      border-bottom: 1px solid #f0f3f9;
+      vertical-align: middle;
+    }
+    .data-table tr:last-child td {
+      border-bottom: none;
+    }
+    .data-table .empty-state {
+      text-align: center;
+      color: #94a3b8;
+      padding: 3rem 0;
+      font-style: italic;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 0.2rem 0.8rem;
+      border-radius: 30px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: #e9edf4;
+      color: #1e293b;
+    }
+    .status-badge.new { background: #dbeafe; color: #1e4a7a; }
+    .status-badge.in-progress { background: #fef9c3; color: #7a6b1a; }
+    .status-badge.completed { background: #d1fae5; color: #0b5e42; }
+    .status-badge.archived { background: #f1f3f5; color: #4b5a6a; }
+    .action-btn {
+      background: transparent;
+      border: none;
+      color: #4b5f77;
+      font-size: 0.9rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 20px;
+    }
+    .action-btn:hover { background: #eef2f6; }
+    .action-btn.delete { color: #b91c1c; }
+    .action-btn.delete:hover { background: #fee2e2; }
+    .pagination {
+      margin-top: 1.5rem;
+      display: flex;
+      gap: 0.3rem;
+      justify-content: flex-end;
+    }
+    .pagination button {
+      background: white;
+      border: 1px solid #d1d9e6;
+      padding: 0.3rem 0.8rem;
+      border-radius: 30px;
+      font-weight: 500;
+    }
+    .pagination button.active {
+      background: #0b1a2e;
+      color: white;
+      border-color: #0b1a2e;
+    }
+    /* ----- portfolio grid (admin) ----- */
+    .portfolio-admin-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px,1fr));
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+    .portfolio-card {
+      background: white;
+      border-radius: 20px;
+      padding: 1.2rem 1.2rem 1.2rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+      border: 1px solid #e9edf4;
+      transition: 0.15s;
+      display: flex;
+      flex-direction: column;
+    }
+    .portfolio-card:hover { border-color: #b9c7da; }
+    .portfolio-card h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.15rem;
+    }
+    .portfolio-card .category {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: #38bdf8;
+      font-weight: 600;
+    }
+    .portfolio-card .desc {
+      color: #334155;
+      font-size: 0.9rem;
+      margin: 0.4rem 0 0.6rem;
+      flex:1;
+    }
+    .portfolio-card .tech {
+      font-size: 0.8rem;
+      color: #4b5f77;
+      background: #f1f5f9;
+      padding: 0.2rem 0.6rem;
+      border-radius: 40px;
+      display: inline-block;
+      width: fit-content;
+    }
+    .portfolio-card .card-actions {
+      margin-top: 0.8rem;
+      display: flex;
+      gap: 0.3rem;
+      border-top: 1px solid #f0f3f9;
+      padding-top: 0.8rem;
+    }
+    .portfolio-card .card-actions button {
+      background: transparent;
+      border: none;
+      padding: 0.2rem 0.8rem;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+    .portfolio-card .card-actions .edit-btn { background: #eef2f6; }
+    .portfolio-card .card-actions .edit-btn:hover { background: #dbeafe; }
+    .portfolio-card .card-actions .del-btn { color: #b91c1c; }
+    .portfolio-card .card-actions .del-btn:hover { background: #fee2e2; }
+    .portfolio-card .featured-badge {
+      background: #fbbf24;
+      color: #0b1a2e;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.1rem 0.8rem;
+      border-radius: 40px;
+      align-self: flex-start;
+      margin-bottom: 0.3rem;
+    }
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      color: #94a3b8;
+      padding: 3rem 0;
+    }
+    /* ----- modal ----- */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      backdrop-filter: blur(3px);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: white;
+      max-width: 520px;
+      width: 100%;
+      padding: 2rem 2rem 1.8rem;
+      border-radius: 30px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal h2 { margin-bottom: 1.2rem; font-weight: 600; }
+    .field {
+      margin-bottom: 1rem;
+    }
+    .field label {
+      display: block;
+      font-weight: 500;
+      font-size: 0.9rem;
+      margin-bottom: 0.2rem;
+      color: #1e293b;
+    }
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 0.6rem 0.9rem;
+      border: 1px solid #d1d9e6;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      background: white;
+    }
+    .field textarea { border-radius: 16px; resize: vertical; }
+    .field input[type="checkbox"] { width: auto; margin-right: 0.5rem; }
+    .field-inline label { display: flex; align-items: center; font-weight: 400; }
+    .image-preview {
+      max-width: 100%;
+      max-height: 120px;
+      margin-top: 0.5rem;
+      border-radius: 12px;
+      border: 1px solid #e9edf4;
+    }
+    .auth-error { color: #b91c1c; font-size: 0.9rem; margin: 0.5rem 0; }
+    .modal-actions {
+      display: flex;
+      gap: 0.8rem;
+      justify-content: flex-end;
+      margin-top: 1.5rem;
+    }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid #d1d9e6;
+      padding: 0.4rem 1.2rem;
+      border-radius: 40px;
+      font-weight: 500;
+    }
+    .btn-ghost:hover { background: #f1f5f9; }
+    .modal .btn-primary { padding: 0.4rem 1.6rem; }
+    /* responsiveness */
+    @media (max-width: 800px) {
+      .admin-shell { flex-direction: column; }
+      .sidebar {
+        width: 100%;
+        height: auto;
+        padding: 1.2rem;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        align-items: center;
+      }
+      .sidebar-brand { margin-bottom: 0; flex:1; }
+      .sidebar-nav { flex-direction: row; flex-wrap: wrap; flex:1; }
+      .sidebar-logout { margin-top:0; }
+      .admin-main { padding: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="admin-shell">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-mark">⌁</span>
+      <span class="brand-name">SwiftWeb<span class="brand-ng">NG</span></span>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="sidebar-link is-active" data-tab="inquiries">Enquiries</button>
+      <button class="sidebar-link" data-tab="portfolio">Portfolio</button>
+    </nav>
+    <button class="sidebar-logout" id="logoutBtn">Log Out</button>
+  </aside>
+
+  <main class="admin-main">
+
+    <!-- ============ ENQUIRIES TAB ============ -->
+    <section class="tab-panel is-active" id="tab-inquiries">
+      <header class="panel-header">
+        <h1>Project Enquiries</h1>
+        <p>Everything submitted through the website contact form.</p>
+      </header>
+
+      <div class="toolbar">
+        <input type="text" id="searchInput" placeholder="Search name, email, service, or message...">
+        <select id="statusFilter">
+          <option value="">All statuses</option>
+          <option value="New">New</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Completed">Completed</option>
+          <option value="Archived">Archived</option>
+        </select>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Date</th><th>Name</th><th>Email</th><th>Phone</th>
+              <th>Service</th><th>Message</th><th>Status</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="inquiriesBody">
+            <tr><td colspan="8" class="empty-state">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination" id="pagination"></div>
+    </section>
+
+    <!-- ============ PORTFOLIO TAB ============ -->
+    <section class="tab-panel" id="tab-portfolio">
+      <header class="panel-header">
+        <h1>Portfolio Projects</h1>
+        <p>These projects appear in the Portfolio section of the live website.</p>
+        <button class="btn-primary" id="newProjectBtn">+ Add Project</button>
+      </header>
+      <div class="portfolio-admin-grid" id="portfolioAdminGrid">
+        <p class="empty-state">Loading...</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ============ PROJECT FORM MODAL ============ -->
+<div class="modal-overlay" id="projectModal">
+  <div class="modal">
+    <h2 id="modalTitle">Add Project</h2>
+    <form id="projectForm">
+      <input type="hidden" id="projectId">
+      <div class="field">
+        <label for="pTitle">Title</label>
+        <input type="text" id="pTitle" required maxlength="150">
+      </div>
+      <div class="field">
+        <label for="pCategory">Category</label>
+        <select id="pCategory" required>
+          <option value="branding">Branding</option>
+          <option value="design">Graphic Design</option>
+          <option value="dev">Web Design</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="pDescription">Description</label>
+        <textarea id="pDescription" rows="4" required maxlength="2000"></textarea>
+      </div>
+      <div class="field">
+        <label for="pTechnologies">Technologies / services used</label>
+        <input type="text" id="pTechnologies" placeholder="e.g. HTML, CSS, JavaScript" maxlength="255">
+      </div>
+      <div class="field field-inline">
+        <label><input type="checkbox" id="pFeatured"> Featured project</label>
+      </div>
+      <div class="field">
+        <label for="pImage">Project image</label>
+        <input type="file" id="pImage" accept="image/png,image/jpeg,image/webp,image/gif">
+        <img id="pImagePreview" class="image-preview" alt="" style="display:none;">
+      </div>
+      <p class="auth-error" id="projectError"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" id="cancelProjectBtn">Cancel</button>
+        <button type="submit" class="btn-primary" id="saveProjectBtn">Save Project</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  (function() {
+    "use strict";
+
+    // ----- MOCK DATA -----
+    let inquiries = [
+      { id: 1, date: '2026-08-01', name: 'Alice Johnson', email: 'alice@example.com', phone: '+1 234 567 8901', service: 'Web Design', message: 'Need a modern agency site.', status: 'New' },
+      { id: 2, date: '2026-08-05', name: 'Bob Smith', email: 'bob@smith.co', phone: '+44 7700 900123', service: 'Branding', message: 'Full brand identity for startup.', status: 'In Progress' },
+      { id: 3, date: '2026-08-10', name: 'Carol White', email: 'carol.w@design.io', phone: '+1 987 654 3210', service: 'Graphic Design', message: 'Packaging design for new product.', status: 'Completed' },
+      { id: 4, date: '2026-08-12', name: 'David Chen', email: 'd.chen@tech.com', phone: '+86 138 0000 1111', service: 'Web Design', message: 'E-commerce redesign with CMS.', status: 'New' },
+      { id: 5, date: '2026-08-13', name: 'Elena Vega', email: 'evega@studio.es', phone: '+34 612 345 678', service: 'Branding', message: 'Logo and visual identity.', status: 'Archived' },
+    ];
+
+    let projects = [
+      { id: 1, title: 'Aurora Brand', category: 'branding', description: 'Visual identity for a wellness brand.', technologies: 'Adobe Suite, strategy', featured: true, image: '' },
+      { id: 2, title: 'EcoNest', category: 'dev', description: 'Responsive website for sustainable living.', technologies: 'React, Tailwind, CMS', featured: false, image: '' },
+      { id: 3, title: 'Citra Design', category: 'design', description: 'UI/UX for a fintech dashboard.', technologies: 'Figma, prototyping', featured: true, image: '' },
+    ];
+
+    // ----- DOM refs -----
+    const inquiriesBody = document.getElementById('inquiriesBody');
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const pagination = document.getElementById('pagination');
+    const portfolioGrid = document.getElementById('portfolioAdminGrid');
+
+    // modal
+    const modal = document.getElementById('projectModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const projectForm = document.getElementById('projectForm');
+    const projectId = document.getElementById('projectId');
+    const pTitle = document.getElementById('pTitle');
+    const pCategory = document.getElementById('pCategory');
+    const pDescription = document.getElementById('pDescription');
+    const pTechnologies = document.getElementById('pTechnologies');
+    const pFeatured = document.getElementById('pFeatured');
+    const pImage = document.getElementById('pImage');
+    const pImagePreview = document.getElementById('pImagePreview');
+    const projectError = document.getElementById('projectError');
+    const cancelBtn = document.getElementById('cancelProjectBtn');
+    const newProjectBtn = document.getElementById('newProjectBtn');
+
+    // ----- helpers -----
+    function formatDate(str) {
+      const d = new Date(str + 'T00:00:00');
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function statusClass(status) {
+      const map = { 'New':'new', 'In Progress':'in-progress', 'Completed':'completed', 'Archived':'archived' };
+      return map[status] || '';
+    }
+
+    // ----- render inquiries (with filter & search) -----
+    function renderInquiries() {
+      const search = searchInput.value.toLowerCase().trim();
+      const status = statusFilter.value;
+      let filtered = inquiries.filter(inq => {
+        const matchSearch = inq.name.toLowerCase().includes(search) ||
+                            inq.email.toLowerCase().includes(search) ||
+                            inq.service.toLowerCase().includes(search) ||
+                            inq.message.toLowerCase().includes(search);
+        const matchStatus = status === '' || inq.status === status;
+        return matchSearch && matchStatus;
+      });
+
+      if (filtered.length === 0) {
+        inquiriesBody.innerHTML = `<tr><td colspan="8" class="empty-state">No enquiries found.</td></tr>`;
+        pagination.innerHTML = '';
+        return;
+      }
+
+      // simple pagination (show all)
+      let rows = filtered.map(inq => `
+        <tr>
+          <td>${formatDate(inq.date)}</td>
+          <td>${inq.name}</td>
+          <td>${inq.email}</td>
+          <td>${inq.phone}</td>
+          <td>${inq.service}</td>
+          <td>${inq.message.substring(0, 50)}${inq.message.length>50?'…':''}</td>
+          <td><span class="status-badge ${statusClass(inq.status)}">${inq.status}</span></td>
+          <td>
+            <button class="action-btn edit-enq" data-id="${inq.id}">✎</button>
+            <button class="action-btn delete delete-enq" data-id="${inq.id}">✕</button>
+          </td>
+        </tr>
+      `).join('');
+      inquiriesBody.innerHTML = rows;
+      pagination.innerHTML = `<button class="active">1</button><button>2</button><button>3</button>`;
+
+      // attach events (delete & edit status toggle)
+      document.querySelectorAll('.delete-enq').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const id = parseInt(this.dataset.id);
+          inquiries = inquiries.filter(inq => inq.id !== id);
+          renderInquiries();
+        });
+      });
+      document.querySelectorAll('.edit-enq').forEach(btn => {
+        btn.addEventListener
